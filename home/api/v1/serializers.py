@@ -8,6 +8,8 @@ from allauth.account.adapter import get_adapter
 from allauth.account.utils import setup_user_email
 from rest_framework import serializers
 from rest_auth.serializers import PasswordResetSerializer
+from home.models import Plan, App, Subscription
+from django.db import IntegrityError
 
 
 User = get_user_model()
@@ -74,3 +76,32 @@ class UserSerializer(serializers.ModelSerializer):
 class PasswordSerializer(PasswordResetSerializer):
     """Custom serializer for rest_auth to solve reset password error"""
     password_reset_form_class = ResetPasswordForm
+
+
+class PlanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Plan
+        fields = ("id", "name", "description", "price", "created_at", "updated_at", )
+
+
+class AppSerializer(serializers.ModelSerializer):
+    subscription = serializers.IntegerField(source="app.subscription", read_only=True)
+    class Meta:
+        model = App
+        read_only_fields = ("user", )
+        fields = ("id", "name", "description", "type", "framework", "domain_name", "screenshot", "user", "subscription", "created_at", "updated_at", )
+
+    def save(self, **kwargs):
+        try:
+            instance = super().save(**kwargs)
+        except IntegrityError:
+            raise serializers.ValidationError(f"App with this name already exist!")
+        else:
+            return instance
+
+
+class SubscriptionSerializer(serializers.ModelSerializer):
+    user = serializers.IntegerField(source="app.user.id", read_only=True)
+    class Meta:
+        model = Subscription
+        fields = ("id", "app", "plan", "active", "user", "created_at", "updated_at", )

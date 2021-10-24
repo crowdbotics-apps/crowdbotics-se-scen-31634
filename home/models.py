@@ -3,7 +3,7 @@ from django.conf import settings
 
 class DateTimeModel(models.Model):
     """
-        Abstract base model for created_at and updated_at fields.
+        Abstract base model to store timestamp.
     """
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -26,12 +26,12 @@ class Plan(DateTimeModel):
         constraints =[models.CheckConstraint(check=models.Q(price__gte=0), name="price_greater_than_or_zero")]
 
     def __str__(self):
-        return self.name
+        return f"{self.name} - {self.price}"
 
 
 class App(DateTimeModel):
     """
-        Model for details of metadata of app
+        Model for app metadata
     """
     TYPE_CHOICES = (
         ("Web", "Web"),
@@ -43,7 +43,7 @@ class App(DateTimeModel):
         ("React Native", "React Native"),
     )
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, related_name="apps")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, blank=True, related_name="apps")
     name = models.CharField(max_length=50)
     description = models.TextField(null=True, blank=True)
     type = models.CharField(max_length=100, choices=TYPE_CHOICES)
