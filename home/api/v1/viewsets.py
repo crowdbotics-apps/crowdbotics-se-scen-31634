@@ -36,6 +36,7 @@ class LoginViewSet(ViewSet):
 class PlanViewSet(ReadOnlyModelViewSet):
     serializer_class = PlanSerializer
     queryset = Plan.objects.all()
+    permission_classes = (permissions.IsAuthenticated, )
 
 
 class AppViewSet(ModelViewSet):
@@ -46,9 +47,17 @@ class AppViewSet(ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.filter(user=self.request.user)
+
 
 class SubscriptionViewSet(ModelViewSet):
     serializer_class = SubscriptionSerializer
     queryset = Subscription.objects.all()
     permission_classes = (permissions.IsAuthenticated, )
     http_method_names = ["get", "post", "put", "patch", ]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.filter(app__user=self.request.user)
